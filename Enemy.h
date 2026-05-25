@@ -9,10 +9,15 @@ class Enemy :
 	int hImage_;//‰æ‘œID
 	Point pos_;//ˆÊ’u
 	DIR dir_;//ˆÚ“®•ûŒü
+
+	float detectRange;
+	bool isChasing;
 public:
 	Enemy();
 	~Enemy();
 	void Update() override;
 	void Draw() override;
+	void CheckPlayerDistance();
+	void ChasePlayer();
 };
 

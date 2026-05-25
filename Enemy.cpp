@@ -1,6 +1,7 @@
 #include "Enemy.h"
 #include "time.h"
 #include "Stage.h"
+#include "Player.h"
 
 namespace
 {
@@ -19,6 +20,9 @@ Enemy::Enemy()
 	hImage_ = LoadGraph("Assets/panda_R.png");
 	pos_ = ENEMY_START_POS; //32はブロックの位置pos_
 	dir_ = INIT_ENEMY_DIR;
+
+	detectRange = 200.0f; //namespace
+	isChasing = false;
 }
 
 Enemy::~Enemy()
@@ -114,4 +118,15 @@ void Enemy::Draw()
 		animTimer = ANIM_INTERVAL + animTimer;
 	}
 	animTimer = animTimer - Time::DeltaTime();
+}
+
+void Enemy::CheckPlayerDistance()
+{
+	Player* player = FindGameObject<Player>();
+	Point pPos = player->GetPlayerPos();
+
+}
+
+void Enemy::ChasePlayer()
+{
 }
