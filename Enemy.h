@@ -2,6 +2,11 @@
 #include ".\Library\GameObject.h"
 #include "global.h"
 
+enum EnemyState
+{
+	PATROL,
+	CHASE
+};
 
 class Enemy :
     public GameObject
@@ -10,14 +15,20 @@ class Enemy :
 	Point pos_;//ˆÊ’u
 	DIR dir_;//ˆÚ“®•ûŒü
 
+	EnemyState state_;
 	float detectRange;
 	bool isChasing;
+
 public:
 	Enemy();
 	~Enemy();
 	void Update() override;
 	void Draw() override;
-	void CheckPlayerDistance();
-	void ChasePlayer();
+
+	void Move();
+	void SerchPlayer();
+	void CheckDistance();
+	void Patrol();
+	void Chase();
 };
 
