@@ -35,7 +35,7 @@ void Enemy::Update()
 	//GetRand(数値)
 	//3秒に1回向きをランダムに変える
 	static float dir_timer = 3.0f;
-	static float prog_timer = 0.25f;
+	static float prog_timer = 0.5f;
 	float dt = Time::DeltaTime();
 	dir_timer = dir_timer - dt;
 	prog_timer = prog_timer - dt;
@@ -47,60 +47,61 @@ void Enemy::Update()
 
 	CheckDistance();
 
-	Point newPos = pos_;
-	if (prog_timer < 0.0f)
-	{
-		switch (dir_)
-		{
-		case UP:
-			newPos.y -= ENEMY_DRAW_SIZE;
-			break;
-		case DOWN:
-			newPos.y += ENEMY_DRAW_SIZE;
-			break;
-		case LEFT:
-			newPos.x -= ENEMY_DRAW_SIZE;
-			break;
-		case RIGHT:
-			newPos.x += ENEMY_DRAW_SIZE;
-			break;
-		default:
-			break;
-		}
-		int mapValue = FindGameObject<Stage>()->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
-		//Stage* stage = FindGameObject<Stage>();
-		//int mapValue = stage->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
-		//移動先がステージの外に出ないようにする
-		if (mapValue!=1)
-		{
-			pos_ = newPos;
-		}
-		else
-		{
-			dir_ = (DIR)(GetRand(3));
-			dir_timer = 3.0f + dir_timer;
+	//Point newPos = pos_;
+	//if (prog_timer < 0.0f)
+	//{
+	//	switch (dir_)
+	//	{
+	//	case UP:
+	//		newPos.y -= ENEMY_DRAW_SIZE;
+	//		break;
+	//	case DOWN:
+	//		newPos.y += ENEMY_DRAW_SIZE;
+	//		break;
+	//	case LEFT:
+	//		newPos.x -= ENEMY_DRAW_SIZE;
+	//		break;
+	//	case RIGHT:
+	//		newPos.x += ENEMY_DRAW_SIZE;
+	//		break;
+	//	default:
+	//		break;
+	//	}
+	//	int mapValue = FindGameObject<Stage>()->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
+	//	//Stage* stage = FindGameObject<Stage>();
+	//	//int mapValue = stage->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
+	//	//移動先がステージの外に出ないようにする
+	//	if (mapValue!=1)
+	//	{
+	//		pos_ = newPos;
+	//	}
+	//	else
+	//	{
+	//		dir_ = (DIR)(GetRand(3));
+	//		dir_timer = 3.0f + dir_timer;
 
-			//switch (dir_)
-			//{
-			//case UP:
-			//	dir_=LEFT;
-			//	break;
-			//case DOWN:
-			//	dir_ = RIGHT;
-			//	break;
-			//case LEFT:
-			//	dir_ = DOWN;
-			//	break;
-			//case RIGHT:
-			//	dir_ = UP;
-			//	break;
-			//default:
-			//	break;
-			//}
-		}
-		prog_timer = 0.5f + prog_timer;
-	}
+	//		//switch (dir_)
+	//		//{
+	//		//case UP:
+	//		//	dir_=LEFT;
+	//		//	break;
+	//		//case DOWN:
+	//		//	dir_ = RIGHT;
+	//		//	break;
+	//		//case LEFT:
+	//		//	dir_ = DOWN;
+	//		//	break;
+	//		//case RIGHT:
+	//		//	dir_ = UP;
+	//		//	break;
+	//		//default:
+	//		//	break;
+	//		//}
+	//	}
+	//	prog_timer = 0.5f + prog_timer;
+	//}
 
+	CheckDistance();
 	switch (state_)
 	{
 	case PATROL:
@@ -229,10 +230,70 @@ void Enemy::Draw()
 
 void Enemy::Move()
 {
+	static float moveTimer = 0.25f;
+
+	moveTimer -= Time::DeltaTime();
+
+	if (moveTimer > 0)
+		return;
+
+	moveTimer = 0.25f;
+
+	Point newPos = pos_;
+
+	switch (dir_)
+	{
+	case UP:
+		newPos.y -= ENEMY_DRAW_SIZE;
+		break;
+
+	case DOWN:
+		newPos.y += ENEMY_DRAW_SIZE;
+		break;
+
+	case LEFT:
+		newPos.x -= ENEMY_DRAW_SIZE;
+		break;
+
+	case RIGHT:
+		newPos.x += ENEMY_DRAW_SIZE;
+		break;
+	}
+
+	int mapValue =
+		FindGameObject<Stage>()->GetMap(
+			newPos.x / CHA_SIZE,
+			newPos.y / CHA_SIZE
+		);
+
+	if (mapValue != 1)
+	{
+		pos_ = newPos;
+	}
 }
 
-void Enemy::SearchPlayer()
+void Enemy::SearchPlayer()//使わない
 {
+	Player* player = FindGameObject<Player>();
+	Point pPos = player->GetPlayerPos();
+
+	int enemyX = pos_.x / CHA_SIZE;
+	int enemyY = pos_.y / CHA_SIZE;
+	int playerX = pPos.x / CHA_SIZE;
+	int playerY = pPos.y / CHA_SIZE;
+	int dx = playerX - enemyX;
+	int dy = playerY - enemyY;
+
+	int distance = abs(dx) + abs(dy);
+
+	if (distance <= 5)
+	{
+		isChasing = true;
+	}
+	else
+	{
+		isChasing = false;
+	}
 }
 
 
@@ -292,7 +353,7 @@ void Enemy::CheckDistance()
 
 void Enemy::Patrol()
 {
-	SearchPlayer();
+	CheckDistance();
 
 	if (isChasing)
 	{
@@ -302,11 +363,38 @@ void Enemy::Patrol()
 
 	//--------------------------------
 	// ランダム移動
+	Move();
+	static float dir_timer = 3.0f;
+	float dt = Time::DeltaTime();
+	dir_timer = dir_timer - dt;
+
+		dir_ = (DIR)(GetRand(3));
+		dir_timer = 3.0f + dir_timer;
+
+		switch (dir_)
+		{
+		case UP:
+			dir_=LEFT;
+			break;
+		case DOWN:
+			dir_ = RIGHT;
+			break;
+		case LEFT:
+			dir_ = DOWN;
+			break;
+		case RIGHT:
+			dir_ = UP;
+			break;
+		default:
+			break;
+		}
 }
+
+
 
 void Enemy::Chase()
 {
-	SearchPlayer();
+	CheckDistance();
 
 	if (!isChasing)
 	{
@@ -314,7 +402,29 @@ void Enemy::Chase()
 		return;
 	}
 
-	//--------------------------------
-	// プレイヤー追跡
+	Player* player = FindGameObject<Player>();
+	Point pPos = player->GetPlayerPos();
+	int enemyX = pos_.x / CHA_SIZE;
+	int enemyY = pos_.y / CHA_SIZE;
+	int playerX = pPos.x / CHA_SIZE;
+	int playerY = pPos.y / CHA_SIZE;
+
+	// プレイヤー方向を向く
+	if (abs(playerX - enemyX) > abs(playerY - enemyY))
+	{
+		if (playerX < enemyX)
+			dir_ = LEFT;
+		else
+			dir_ = RIGHT;
+	}
+	else
+	{
+		if (playerY < enemyY)
+			dir_ = UP;
+		else
+			dir_ = DOWN;
+	}
+
+	Move();
 }
 
