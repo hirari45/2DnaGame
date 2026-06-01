@@ -231,7 +231,7 @@ void Enemy::Move()
 {
 }
 
-void Enemy::SerchPlayer()
+void Enemy::SearchPlayer()
 {
 }
 

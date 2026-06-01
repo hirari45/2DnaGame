@@ -26,7 +26,7 @@ public:
 	void Draw() override;
 
 	void Move();
-	void SerchPlayer();
+	void SearchPlayer();
 	void CheckDistance();
 	void Patrol();
 	void Chase();
