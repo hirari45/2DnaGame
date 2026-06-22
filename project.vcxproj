@@ -135,7 +135,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AttackState.h" />
+    <ClInclude Include="ChaseState.h" />
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="EnemyStateBase.h" />
     <ClInclude Include="global.h" />
     <ClInclude Include="ImGui\imconfig.h" />
     <ClInclude Include="ImGui\imgui.h" />
@@ -154,7 +157,9 @@
     <ClInclude Include="Library\SceneBase.h" />
     <ClInclude Include="Library\SceneManager.h" />
     <ClInclude Include="Library\Time.h" />
+    <ClInclude Include="PatrolState.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="SearchState.h" />
     <ClInclude Include="Source\BootScene.h" />
     <ClInclude Include="Source\Screen.h" />
     <ClInclude Include="Source\PlayScene.h" />
@@ -163,7 +168,10 @@
     <ClInclude Include="Stage.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AttackState.cpp" />
+    <ClCompile Include="ChaseState.cpp" />
     <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="EnemyStateBase.cpp" />
     <ClCompile Include="ImGui\imgui.cpp" />
     <ClCompile Include="ImGui\imgui_draw.cpp" />
     <ClCompile Include="ImGui\imgui_impl_dx11.cpp" />
@@ -178,7 +186,9 @@
     <ClCompile Include="Library\ObjectManager.cpp" />
     <ClCompile Include="Library\SceneManager.cpp" />
     <ClCompile Include="Library\Time.cpp" />
+    <ClCompile Include="PatrolState.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="SearchState.cpp" />
     <ClCompile Include="Source\BootScene.cpp" />
     <ClCompile Include="Source\PlayScene.cpp" />
     <ClCompile Include="Source\SceneFactory.cpp" />

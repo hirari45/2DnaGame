@@ -2,33 +2,36 @@
 #include ".\Library\GameObject.h"
 #include "global.h"
 
-enum EnemyState
-{
-	PATROL,
-	CHASE
-};
+class EnemyStateBase;
 
-class Enemy :
-    public GameObject
+class Enemy : public GameObject
 {
-	int hImage_;//‰æ‘œID
-	Point pos_;//ˆÊ’u
-	DIR dir_;//ˆÚ“®•ûŒü
+    int hImage_;
+    Point pos_;
+    DIR dir_;
+    float searchTimer_ = 0.0f;
 
-	EnemyState state_;
-	float detectRange;
-	bool isChasing;
+private:
+    EnemyStateBase* state_ = nullptr;
+    EnemyStateBase* nextState_ = nullptr;
 
 public:
-	Enemy();
-	~Enemy();
-	void Update() override;
-	void Draw() override;
+    Enemy();
+    ~Enemy();
 
-	void Move();
-	void SearchPlayer();
-	void CheckDistance();
-	void Patrol();
-	void Chase();
+    void Update();
+    void Draw();
+
+    void ChangeState(EnemyStateBase* nextState);
+    void ApplyStateChange();
+
+    bool CheckCanSeePlayer();
+    bool CheckAttackRange();
+    bool CheckSearchTimeOver();
+
+    void Patrol();
+    void Chase();
+    void Attack();
+    void Search();
 };
 

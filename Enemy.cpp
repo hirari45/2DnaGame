@@ -2,6 +2,9 @@
 #include "time.h"
 #include "Stage.h"
 #include "Player.h"
+#include "SearchState.h"
+#include "PatrolState.h"
+#include "ChaseState.h"
 
 namespace
 {
@@ -15,103 +18,28 @@ namespace
 
 
 Enemy::Enemy()
-	: GameObject() 
 {
 	hImage_ = LoadGraph("Assets/panda_R.png");
 	pos_ = ENEMY_START_POS; //32はブロックの位置pos_
 	dir_ = INIT_ENEMY_DIR;
 
-	state_ = PATROL;
-	detectRange = 200.0f; //namespace
-	isChasing = false;
+	state_ = new PatrolState();
+	state_->Enter(this);
 }
 
 Enemy::~Enemy()
 {
+	delete state_;
 }
 
 void Enemy::Update()
 {
-	//GetRand(数値)
-	//3秒に1回向きをランダムに変える
-	static float dir_timer = 3.0f;
-	static float prog_timer = 0.25f;
-	float dt = Time::DeltaTime();
-	dir_timer = dir_timer - dt;
-	prog_timer = prog_timer - dt;
-	//if (dir_timer < 0.0f)
-	//{
-	//	dir_ = (DIR)(GetRand(3));
-	//	dir_timer = 3.0f + dir_timer;
-	//}
-
-	CheckDistance();
-
-	Point newPos = pos_;
-	if (prog_timer < 0.0f)
+	if (state_)
 	{
-		switch (dir_)
-		{
-		case UP:
-			newPos.y -= ENEMY_DRAW_SIZE;
-			break;
-		case DOWN:
-			newPos.y += ENEMY_DRAW_SIZE;
-			break;
-		case LEFT:
-			newPos.x -= ENEMY_DRAW_SIZE;
-			break;
-		case RIGHT:
-			newPos.x += ENEMY_DRAW_SIZE;
-			break;
-		default:
-			break;
-		}
-		int mapValue = FindGameObject<Stage>()->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
-		//Stage* stage = FindGameObject<Stage>();
-		//int mapValue = stage->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
-		//移動先がステージの外に出ないようにする
-		if (mapValue!=1)
-		{
-			pos_ = newPos;
-		}
-		else
-		{
-			dir_ = (DIR)(GetRand(3));
-			dir_timer = 3.0f + dir_timer;
-
-			//switch (dir_)
-			//{
-			//case UP:
-			//	dir_=LEFT;
-			//	break;
-			//case DOWN:
-			//	dir_ = RIGHT;
-			//	break;
-			//case LEFT:
-			//	dir_ = DOWN;
-			//	break;
-			//case RIGHT:
-			//	dir_ = UP;
-			//	break;
-			//default:
-			//	break;
-			//}
-		}
-		prog_timer = 0.5f + prog_timer;
+		state_->Update(this);
 	}
 
-	switch (state_)
-	{
-	case PATROL:
-		Patrol();
-		break;
-
-	case CHASE:
-		Chase();
-		break;
-	}
-
+	ApplyStateChange();
 }
 
 void Enemy::Draw()
@@ -217,9 +145,9 @@ void Enemy::Draw()
 		{  nowFrame * ENEMY_SIZE, 2 * ENEMY_SIZE, ENEMY_SIZE, ENEMY_SIZE}
 	};
 	DrawBox(pos_.x, pos_.y, pos_.x + ENEMY_DRAW_SIZE, pos_.y + ENEMY_DRAW_SIZE,
-		GetColor(255, 255, 0), FALSE,2);
-	DrawRectExtendGraph(pos_.x, pos_.y,pos_.x + ENEMY_DRAW_SIZE, pos_.y + ENEMY_DRAW_SIZE,
-		               iRect[dir_].x, iRect[dir_].y, iRect[dir_].w, iRect[dir_].h, hImage_, TRUE);
+		GetColor(255, 255, 0), FALSE, 2);
+	DrawRectExtendGraph(pos_.x, pos_.y, pos_.x + ENEMY_DRAW_SIZE, pos_.y + ENEMY_DRAW_SIZE,
+		iRect[dir_].x, iRect[dir_].y, iRect[dir_].w, iRect[dir_].h, hImage_, TRUE);
 	if (animTimer < 0) {
 		frame = (++frame) % 4;
 		animTimer = ANIM_INTERVAL + animTimer;
@@ -227,94 +155,169 @@ void Enemy::Draw()
 	animTimer = animTimer - Time::DeltaTime();
 }
 
-void Enemy::Move()
+void Enemy::ChangeState(EnemyStateBase* nextState)
 {
+	nextState_ = nextState;
 }
 
-void Enemy::SearchPlayer()
+void Enemy::ApplyStateChange()
 {
+	if (nextState_ == nullptr)
+	{
+		return;
+	}
+
+	state_->Exit(this);
+	delete state_;
+
+	state_ = nextState_;
+	nextState_ = nullptr;
+
+	state_->Enter(this);
 }
 
-
-
-void Enemy::CheckDistance()
+bool Enemy::CheckCanSeePlayer()
 {
 	Player* player = FindGameObject<Player>();
+
 	Point pPos = player->GetPlayerPos();
 
 	int enemyX = pos_.x / CHA_SIZE;
 	int enemyY = pos_.y / CHA_SIZE;
+
 	int playerX = pPos.x / CHA_SIZE;
 	int playerY = pPos.y / CHA_SIZE;
+
 	int dx = playerX - enemyX;
 	int dy = playerY - enemyY;
 
 	int distance = abs(dx) + abs(dy);
 
-	if (distance <= 5)
+	if (distance > 5)
 	{
-		if (enemyY == playerY)
-		{
-			bool blocked = false;
-
-			int start = min(enemyX, playerX);
-			int end = max(enemyX, playerX);
-			for (int x = start + 1; x < end; x++)
-			{
-				if (FindGameObject<Stage>()->GetMap(x, enemyY) == 1)
-				{
-					blocked = true;
-					break;
-				}
-			}
-			isChasing = !blocked;
-			return;
-		}
-		if (enemyX == playerX)
-		{
-			bool blocked = false;
-			int start = min(enemyY, playerY);
-			int end = max(enemyY, playerY);
-			for (int y = start + 1; y < end; y++)
-			{
-				if (FindGameObject<Stage>()->GetMap(enemyX, y) == 1)
-				{
-					blocked = true;
-					break;
-				}
-			}
-			isChasing = !blocked;
-			return;
-		}
+		return false;
 	}
-	isChasing = false;
+
+	// 横方向チェック
+	if (enemyY == playerY)
+	{
+		int start = min(enemyX, playerX);
+		int end = max(enemyX, playerX);
+
+		for (int x = start + 1; x < end; x++)
+		{
+			if (FindGameObject<Stage>()->GetMap(x, enemyY) == 1)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	// 縦方向チェック
+	if (enemyX == playerX)
+	{
+		int start = min(enemyY, playerY);
+		int end = max(enemyY, playerY);
+
+		for (int y = start + 1; y < end; y++)
+		{
+			if (FindGameObject<Stage>()->GetMap(enemyX, y) == 1)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	return false;
+
+}
+
+bool Enemy::CheckAttackRange()
+{
+	Player* player = FindGameObject<Player>();
+
+	Point pPos = player->GetPlayerPos();
+
+	int dx = abs(pPos.x - pos_.x);
+	int dy = abs(pPos.y - pos_.y);
+
+	return (dx + dy) <= CHA_SIZE;
+}
+
+bool Enemy::CheckSearchTimeOver()
+{
+	return searchTimer_ <= 0.0f;
 }
 
 void Enemy::Patrol()
 {
-	SearchPlayer();
+	static float dir_timer = 3.0f;
+	static float prog_timer = 0.25f;
 
-	if (isChasing)
+	float dt = Time::DeltaTime();
+
+	dir_timer -= dt;
+	prog_timer -= dt;
+
+	Point newPos = pos_;
+
+	if (prog_timer < 0.0f)
 	{
-		state_ = CHASE;
-		return;
-	}
+		switch (dir_)
+		{
+		case UP:    newPos.y -= ENEMY_DRAW_SIZE; break;
+		case DOWN:  newPos.y += ENEMY_DRAW_SIZE; break;
+		case LEFT:  newPos.x -= ENEMY_DRAW_SIZE; break;
+		case RIGHT: newPos.x += ENEMY_DRAW_SIZE; break;
+		}
 
-	//--------------------------------
-	// ランダム移動
+		int mapValue =
+			FindGameObject<Stage>()
+			->GetMap(newPos.x / CHA_SIZE, newPos.y / CHA_SIZE);
+
+		if (mapValue != 1)
+		{
+			pos_ = newPos;
+		}
+		else
+		{
+			dir_ = (DIR)GetRand(3);
+		}
+
+		prog_timer = 0.5f;
+	}
 }
 
 void Enemy::Chase()
 {
-	SearchPlayer();
+	Player* player = FindGameObject<Player>();
 
-	if (!isChasing)
+	Point pPos = player->GetPlayerPos();
+
+	int dx = pPos.x - pos_.x;
+	int dy = pPos.y - pos_.y;
+
+	if (abs(dx) > abs(dy))
 	{
-		state_ = PATROL;
-		return;
+		dir_ = (dx > 0) ? RIGHT : LEFT;
+	}
+	else
+	{
+		dir_ = (dy > 0) ? DOWN : UP;
 	}
 
-	//--------------------------------
-	// プレイヤー追跡
+}
+
+void Enemy::Attack()
+{
+}
+
+void Enemy::Search()
+{
+	searchTimer_ -= Time::DeltaTime();
 }
 
