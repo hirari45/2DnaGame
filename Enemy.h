@@ -33,5 +33,7 @@ public:
     void Chase();
     void Attack();
     void Search();
+
+    void DrawVisionCone();
 };
 
