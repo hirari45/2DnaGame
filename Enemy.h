@@ -20,6 +20,7 @@ public:
     ~Enemy();
 
     void Update();
+ 
     void Draw();
 
     void ChangeState(EnemyStateBase* nextState);
