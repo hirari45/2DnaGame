@@ -223,12 +223,6 @@ void Enemy::Patrol()
 		prog_timer = 0.5f;
 	}
 }
-	int enemyX = pos_.x / CHA_SIZE;
-	int enemyY = pos_.y / CHA_SIZE;
-	int playerX = pPos.x / CHA_SIZE;
-	int playerY = pPos.y / CHA_SIZE;
-	int dx = playerX - enemyX;
-	int dy = playerY - enemyY;
 
 void Enemy::Chase()
 {
